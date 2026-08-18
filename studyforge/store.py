@@ -67,6 +67,19 @@ def retrieve(query: str, k: int | None = None, settings: Settings | None = None)
     return hits
 
 
+def count(settings: Settings | None = None) -> int:
+    return get_collection(settings).count()
+
+
+def list_sources(settings: Settings | None = None) -> list[str]:
+    collection = get_collection(settings)
+    if collection.count() == 0:
+        return []
+    data = collection.get(include=["metadatas"])
+    names = {str(meta.get("source", "")).strip() for meta in (data.get("metadatas") or []) if meta}
+    return sorted(name for name in names if name)
+
+
 def reset_collection(settings: Settings | None = None) -> None:
     settings = settings or get_settings()
     Path(settings.chroma_path).mkdir(parents=True, exist_ok=True)

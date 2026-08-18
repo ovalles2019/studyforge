@@ -20,13 +20,13 @@ StudyForge still showcases the stack AMD wants to see — **Qwen + vLLM + ROCm o
 
 That gap is a feature in the write-up, not something to hide.
 
-## Week 0 status
+## Status
 
 - [x] Repo + README describing the goal
 - [x] PDF → chunks → embeddings → ChromaDB pipeline (CPU)
 - [x] RAG client that speaks OpenAI-compatible APIs (Fireworks now, vLLM later)
 - [x] Quiz JSON prompt + three explanation modes
-- [ ] Streamlit UI (Week 1)
+- [x] Streamlit UI (upload, streaming cited chat, quiz, explanation modes)
 - [ ] MI300X droplet (Week 2 — do not activate credits yet)
 - [ ] Benchmarks + demo video (Week 3)
 - [ ] Showcase post (Week 4)
@@ -41,24 +41,28 @@ python3.11 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env
+streamlit run app.py
+```
+
+Click **Load sample** in the sidebar, then ask “What is RAG?” or generate a quiz.
+
+Ingest and retrieval work with an empty `LLM_API_KEY` — you will see the retrieved passages. Put a Fireworks (or other) key in `.env` to get streaming answers and quizzes. Later, point `LLM_BASE_URL` at the MI300X droplet.
+
+CLI still works if you want the notebook/script path:
+
+```bash
 python scripts/make_sample_pdf.py
 python -m studyforge ingest sample/rag_primer.pdf --reset
 python -m studyforge ask "What is RAG?" --mode exam
-```
-
-Ingest and retrieval work with an empty `LLM_API_KEY` — you will see the retrieved passages. Put a Fireworks (or other) key in `.env` to get a generated answer, a quiz, and later to swap `LLM_BASE_URL` to the droplet:
-
-```bash
-python -m studyforge ask "Why does StudyForge cite pages?" --mode kid
 python -m studyforge quiz --topic "embeddings"
 ```
 
-Or walk the same pipeline in `notebooks/01_rag_pipeline.ipynb`.
+Walk the same pipeline in `notebooks/01_rag_pipeline.ipynb`.
 
 ## Architecture
 
 ```
-Streamlit UI  (Week 1)
+Streamlit UI
       │
       ▼
 Python on your laptop
@@ -98,4 +102,4 @@ LLM_MODEL=Qwen/Qwen3-8B
 
 ## What's next
 
-Week 1 is the Streamlit UI: upload, streaming answers with citations, interactive quiz, explanation-mode dropdown. After that, activate credits, measure tokens/sec and time-to-first-token, record a 2–3 minute demo, and post in the AMD Developer Community Showcase.
+Week 2 is the MI300X: activate credits, serve Qwen with vLLM, and point `.env` at the droplet. Then measure tokens/sec and time-to-first-token, record a 2–3 minute demo, and post in the AMD Developer Community Showcase.

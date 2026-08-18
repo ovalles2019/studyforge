@@ -1,5 +1,11 @@
 from __future__ import annotations
 
+MODE_LABELS = {
+    "kid": "Explain like I'm 12",
+    "exam": "Exam-ready",
+    "deep": "Deep dive",
+}
+
 EXPLANATION_MODES = {
     "kid": (
         "Explain like I'm 12. Use short sentences, everyday analogies, and no jargon "
