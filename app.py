@@ -7,7 +7,7 @@ load_dotenv()
 import streamlit as st
 
 from studyforge import llm
-from studyforge.config import get_settings
+from studyforge.config import Settings, get_settings
 from studyforge.prompts import MODE_LABELS
 from studyforge.rag import ingest_bytes, ingest_sample, prepare_answer, quiz
 from studyforge.store import count as chunk_count
@@ -18,6 +18,19 @@ SAMPLE_PROMPTS = [
     "How do quizzes stay grounded in the notes?",
     "Why run this on an MI300X instead of Qwen 3.8 2.4T?",
 ]
+
+PROVIDERS = {
+    "Fireworks (AMD perk)": {
+        "base_url": "https://api.fireworks.ai/inference/v1",
+        "model": "accounts/fireworks/models/qwen3-235b-a22b",
+        "keys": "https://fireworks.ai/account/api-keys",
+    },
+    "OpenAI": {
+        "base_url": "https://api.openai.com/v1",
+        "model": "gpt-4o-mini",
+        "keys": "https://platform.openai.com/api-keys",
+    },
+}
 
 
 def _init_state() -> None:
@@ -62,13 +75,58 @@ def _reset_workspace() -> None:
     st.session_state.pending_question = None
 
 
-def _render_sidebar(settings) -> tuple[str, str]:
+def _provider_name(settings: Settings) -> str:
+    url = settings.llm_base_url.lower()
+    if "openai.com" in url:
+        return "OpenAI"
+    return "Fireworks (AMD perk)"
+
+
+def _live_settings(base: Settings) -> Settings:
+    names = list(PROVIDERS)
+    env_provider = _provider_name(base)
+    # Earlier builds defaulted this widget to Fireworks and Streamlit kept that session.
+    if (
+        st.session_state.get("llm_provider") == "Fireworks (AMD perk)"
+        and env_provider == "OpenAI"
+    ):
+        st.session_state.llm_provider = "OpenAI"
+    if "llm_provider" not in st.session_state:
+        st.session_state.llm_provider = env_provider
+    provider = st.sidebar.selectbox("LLM provider", names, key="llm_provider")
+    spec = PROVIDERS[provider]
+    if base.llm_enabled:
+        st.sidebar.caption("Using the API key from `.env`. Leave the box below empty.")
+    override = st.sidebar.text_input(
+        "API key override (optional)",
+        type="password",
+        help="Leave blank to use LLM_API_KEY from .env. Paste here only to try a different key this session.",
+        key="llm_api_key_input",
+        placeholder="already set in .env" if base.llm_enabled else "paste a key",
+    )
+    model_key = f"model-{provider}"
+    if model_key not in st.session_state:
+        st.session_state[model_key] = (
+            base.llm_model if provider == env_provider else spec["model"]
+        )
+    model = st.sidebar.text_input("Model", key=model_key)
+    updates = {
+        "llm_base_url": spec["base_url"],
+        "llm_model": (model or "").strip() or spec["model"],
+    }
+    if override.strip():
+        updates["llm_api_key"] = override.strip()
+    return base.model_copy(update=updates)
+
+
+def _render_sidebar(settings) -> tuple[str, str, Settings]:
     st.sidebar.markdown("**StudyForge**")
     st.sidebar.caption("Student study copilot · AMD Instinct MI300X")
+    settings = _live_settings(settings)
 
     llm_ok = settings.llm_enabled
     st.sidebar.markdown(
-        f"{'🟢' if llm_ok else '🟡'} {'LLM connected' if llm_ok else 'Retrieval only (no API key)'}"
+        f"{'🟢' if llm_ok else '🟡'} {'LLM connected' if llm_ok else 'Retrieval only (paste a key above)'}"
     )
     st.sidebar.caption(settings.llm_model)
     n = chunk_count(settings)
@@ -110,7 +168,7 @@ def _render_sidebar(settings) -> tuple[str, str]:
         _reset_workspace()
         st.rerun()
 
-    return view, mode
+    return view, mode, settings
 
 
 def _render_ask(mode: str, settings) -> None:
@@ -244,7 +302,7 @@ def main() -> None:
     st.title("StudyForge")
     st.caption("Upload notes. Get cited answers. Drill with a quiz. Built to run on an Instinct MI300X.")
 
-    view, mode = _render_sidebar(settings)
+    view, mode, settings = _render_sidebar(settings)
     if view == "Ask":
         _render_ask(mode, settings)
     else:

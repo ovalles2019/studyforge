@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from functools import lru_cache
 from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -13,7 +12,7 @@ class Settings(BaseSettings):
 
     llm_base_url: str = "https://api.fireworks.ai/inference/v1"
     llm_api_key: str = ""
-    llm_model: str = "accounts/fireworks/models/qwen3-8b"
+    llm_model: str = "accounts/fireworks/models/qwen3-235b-a22b"
 
     embedding_model: str = "all-MiniLM-L6-v2"
     chroma_path: str = str(ROOT / "data" / "chroma")
@@ -27,6 +26,5 @@ class Settings(BaseSettings):
         return bool(self.llm_api_key.strip())
 
 
-@lru_cache
 def get_settings() -> Settings:
     return Settings()
