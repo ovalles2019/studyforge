@@ -1,0 +1,9 @@
+# Local CPU pipeline (Week 0). The GPU droplet only runs vLLM later.
+pymupdf==1.26.4
+chromadb==1.0.15
+sentence-transformers==5.1.0
+openai==1.109.1
+python-dotenv==1.1.1
+pydantic-settings==2.10.1
+streamlit==1.49.1
+pytest==8.4.1
