@@ -14,7 +14,7 @@ StudyForge still showcases the stack AMD wants to see — **Qwen + vLLM + ROCm o
 
 | When | Model | Where |
 |---|---|---|
-| Week 0–1 (dev, $0 GPU) | Qwen 3 8B class via Fireworks or similar | Laptop + API |
+| Week 0–1 (dev, $0 GPU) | `gpt-4o-mini` or a serverless Qwen | Laptop + API |
 | Week 2–3 (demo + benches) | `Qwen/Qwen3-8B` or `Qwen/Qwen3-32B` | One MI300X, vLLM |
 | Not in budget | Qwen3.8-2.4T | Multi-node; sequel if credits allow |
 
@@ -27,11 +27,24 @@ That gap is a feature in the write-up, not something to hide.
 - [x] RAG client that speaks OpenAI-compatible APIs (Fireworks now, vLLM later)
 - [x] Quiz JSON prompt + three explanation modes
 - [x] Streamlit UI (upload, streaming cited chat, quiz, explanation modes)
-- [ ] MI300X droplet (Week 2 — do not activate credits yet)
+- [x] Cloud credit request submitted (waiting on approval — do not activate yet)
+- [ ] MI300X droplet (Week 2)
 - [ ] Benchmarks + demo video (Week 3)
 - [ ] Showcase post (Week 4)
 
-Credit request (portal, 2–3 day approval) is a **you** action: Member Perks → Request Cloud Credits. Activate in Week 2, not now.
+## While credits are pending
+
+Keep the GPU off. Use this waiting time:
+
+1. Upload a **real course PDF** and confirm citations still make sense.
+2. Dry-run the benchmark harness against the current API (OpenAI numbers are not the showcase):
+
+```bash
+python scripts/bench.py --runs 3
+```
+
+3. Sketch the 60-second demo: Load sample → ask → switch explanation mode → generate quiz.
+4. When the approval email arrives, **do not activate** until you are ready to sit at the machine. Credits expire 30 days after activation.
 
 ## Quick start (CPU, no GPU)
 
@@ -46,7 +59,7 @@ streamlit run app.py
 
 Click **Load sample** in the sidebar, then ask “What is RAG?” or generate a quiz.
 
-Ingest and retrieval work with an empty `LLM_API_KEY` — you will see the retrieved passages. Put a Fireworks (or other) key in `.env` to get streaming answers and quizzes. Later, point `LLM_BASE_URL` at the MI300X droplet.
+Ingest and retrieval work with an empty `LLM_API_KEY`. Put an OpenAI-compatible key in `.env` for streaming answers and quizzes. Later, point `LLM_BASE_URL` at the MI300X droplet.
 
 CLI still works if you want the notebook/script path:
 
@@ -83,14 +96,15 @@ Pointing the same `openai` client at Fireworks vs vLLM is a `base_url` change. T
 
 ## Reproduce on MI300X (Week 2)
 
-1. Start a GPU droplet from the **vLLM Quick Start** image.
-2. Serve a Qwen that fits one card, for example:
+1. Activate credits only when you can babysit the droplet. Use the **vLLM Quick Start** image.
+2. On the droplet:
 
 ```bash
-vllm serve Qwen/Qwen3-8B --host 0.0.0.0 --port 8000
+chmod +x scripts/serve_mi300x.sh
+MODEL=Qwen/Qwen3-8B ./scripts/serve_mi300x.sh
 ```
 
-3. In `.env`:
+3. On your laptop `.env`:
 
 ```
 LLM_BASE_URL=http://YOUR_DROPLET_IP:8000/v1
@@ -98,8 +112,14 @@ LLM_API_KEY=not-needed
 LLM_MODEL=Qwen/Qwen3-8B
 ```
 
-4. Same `ingest` / `ask` / `quiz` commands as above.
+4. Same Streamlit / `ingest` / `ask` / `quiz` commands as above, then:
+
+```bash
+python scripts/bench.py --runs 5 --max-tokens 256
+```
+
+Shut the droplet down the moment you step away.
 
 ## What's next
 
-Week 2 is the MI300X: activate credits, serve Qwen with vLLM, and point `.env` at the droplet. Then measure tokens/sec and time-to-first-token, record a 2–3 minute demo, and post in the AMD Developer Community Showcase.
+When credits are approved: activate, serve Qwen with vLLM, point `.env` at the droplet, run `scripts/bench.py`, record a 2–3 minute demo, and post in the AMD Developer Community Showcase.
