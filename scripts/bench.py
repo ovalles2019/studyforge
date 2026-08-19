@@ -9,11 +9,15 @@ from __future__ import annotations
 
 import argparse
 import statistics
+import sys
 import time
+from pathlib import Path
 
 from dotenv import load_dotenv
 
-load_dotenv()
+ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT))
+load_dotenv(ROOT / ".env")
 
 from studyforge.config import get_settings
 from studyforge.llm import _client

@@ -43,6 +43,8 @@ Keep the GPU off. Use this waiting time:
 python scripts/bench.py --runs 3
 ```
 
+Saved baseline: [`results/openai-gpt4o-mini-dry-run-2026-08-18.md`](results/openai-gpt4o-mini-dry-run-2026-08-18.md) (median TTFT 1.15s, ~102 tok/s on `gpt-4o-mini`).
+
 3. Sketch the 60-second demo: Load sample → ask → switch explanation mode → generate quiz.
 4. When the approval email arrives, **do not activate** until you are ready to sit at the machine. Credits expire 30 days after activation.
 
