@@ -13,6 +13,13 @@ def _client(settings: Settings) -> OpenAI:
     return OpenAI(api_key=key, base_url=settings.llm_base_url)
 
 
+def _extra(settings: Settings) -> dict:
+    # Qwen 3.7/3.8 on Fireworks default to long chain-of-thought otherwise.
+    if "fireworks.ai" in settings.llm_base_url and "qwen" in settings.llm_model.lower():
+        return {"extra_body": {"reasoning_effort": "none"}}
+    return {}
+
+
 def chat(
     messages: list[dict[str, str]],
     *,
@@ -24,6 +31,7 @@ def chat(
         model=settings.llm_model,
         temperature=temperature,
         messages=messages,
+        **_extra(settings),
     )
     return (resp.choices[0].message.content or "").strip()
 
@@ -40,6 +48,7 @@ def stream_chat(
         temperature=temperature,
         messages=messages,
         stream=True,
+        **_extra(settings),
     )
     for event in stream:
         delta = event.choices[0].delta.content if event.choices else None
